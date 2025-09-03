@@ -1,33 +1,21 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.arcrobotics.ftclib.command.Command;
-import com.arcrobotics.ftclib.command.CommandOpMode;
-import com.arcrobotics.ftclib.command.InstantCommand;
-import com.arcrobotics.ftclib.command.RunCommand;
-import com.arcrobotics.ftclib.command.Subsystem;
-import com.arcrobotics.ftclib.command.button.Button;
-import com.arcrobotics.ftclib.command.button.GamepadButton;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
-
-
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
-import java.sql.Time;
-import java.util.Collections;
-import java.util.Set;
-import java.util.Timer;
-
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 @TeleOp(name = " Telop")
 public class robot extends OpMode
 {
+
+  private  Limelight3A limelight;
   public GamepadEx ps4;
   private powertrain drivetrain;
   private  elevator elevator;
@@ -49,10 +37,15 @@ public class robot extends OpMode
             elevator = new elevator(hardwareMap);
             Arm = new arm_Gripper(hardwareMap);
 
-
-
-
-
+            limelight = hardwareMap.get(Limelight3A.class, "limelight");
+            telemetry.setMsTransmissionInterval(11);
+            limelight.pipelineSwitch(0);
+            /*
+             * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
+             */
+            limelight.start();
+            telemetry.addData(">", "Robot Ready.  Press Play.");
+            telemetry.update();
         }
 
 
