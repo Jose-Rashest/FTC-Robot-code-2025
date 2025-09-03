@@ -2,20 +2,17 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-
-@TeleOp(name = " Telop")
-public class robot extends OpMode
-{
-
-  private  Limelight3A limelight;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+@TeleOp(name = " Telop", group = "CodeTest")
+public class robot extends OpMode {
+  public  Limelight3A limelight;
   public GamepadEx ps4;
   private powertrain drivetrain;
   private  elevator elevator;
@@ -24,118 +21,120 @@ public class robot extends OpMode
 
   //rutines
 
-
   ElapsedTime timer = new ElapsedTime();
 
+    @Override
+    public void init() {
+    //subsystem and control
+    drivetrain = new powertrain(hardwareMap);
+    ps4 = new GamepadEx(gamepad1);
+    elevator = new elevator(hardwareMap);
+    Arm = new arm_Gripper(hardwareMap);
+
+    limelight = hardwareMap.get(Limelight3A.class, "limelight");
+    telemetry.setMsTransmissionInterval(11);
+    limelight.pipelineSwitch(0);
+    /*
+     * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
+     */
+    limelight.start();
+    telemetry.addData(">", "Robot Ready.  Press Play.");
+    telemetry.update();
+    }
+//    @Override
+//    public void init_loop() {}
+//
+//    @Override
+//    public void start() {}
+
+    @Override
+    public void loop() {
+       telemetry.addData("angle", "angle (%.2f) ", Arm.getangleArm());
+       telemetry.addData("elevator encode", "elevator (%.2f)", elevator.elevatorPos());
+       telemetry.addData("right2", "rightElevator (%.2f)", elevator.elevator_leftMotor());
+       ps4.readButtons();
+       drivetrain.inputcontrol(ps4);
+       drivetrain.arcade();
+       elevator.loop();
+       Arm.getangleArm();
 
 
-        @Override
-        public void init() {
-            //subsystem and control
-            drivetrain = new powertrain(hardwareMap);
-            ps4 = new GamepadEx(gamepad1);
-            elevator = new elevator(hardwareMap);
-            Arm = new arm_Gripper(hardwareMap);
+        //controls
+        // climber boton A, right bumper Take piece,
+        if(ps4.wasJustPressed(GamepadKeys.Button.A)){
+            elevator.climber();
 
-            limelight = hardwareMap.get(Limelight3A.class, "limelight");
-            telemetry.setMsTransmissionInterval(11);
-            limelight.pipelineSwitch(0);
-            /*
-             * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
-             */
-            limelight.start();
-            telemetry.addData(">", "Robot Ready.  Press Play.");
-            telemetry.update();
+        } else if(ps4.wasJustReleased(GamepadKeys.Button.A)){
+            elevator.offsetPOs();
         }
 
-
-
-        @Override
-        public void init_loop() {
-
-
+        if(ps4.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
+            Arm.TakePiece();
+            Arm.OpenGripper();
+        } else if (ps4.wasJustReleased(GamepadKeys.Button.RIGHT_BUMPER)) {
+            Arm.Gripperoffset();
+            Arm.armOfseTake();
         }
 
-
-
-        @Override
-        public void start() {
-
-
+        if(ps4.wasJustPressed(GamepadKeys.Button.X)){
+            Arm.OutPieceBasket();
+            elevator.lowBasquet();
+        } else if( ps4.wasJustReleased(GamepadKeys.Button.X)){
+            Arm.OpenGripper();
+            Arm.ArmOfsetBasket();
+            elevator.offsetPOs();
         }
 
-        @Override
-        public void loop() {
+        if (ps4.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
+            Arm.OpenGripper();
+        }
 
-           telemetry.addData("angle", "angle (%.2f) ", Arm.getangleArm());
-           telemetry.addData("elevator encode", "elevator (%.2f)", elevator.elevatorPos());
-           telemetry.addData("right2", "rightElevator (%.2f)", elevator.elevator_leftMotor());
-            ps4.readButtons();
-            drivetrain.inputcontrol(ps4);
-            drivetrain.arcade();
-            elevator.loop();
-            Arm.getangleArm();
+        if(ps4.wasJustPressed(GamepadKeys.Button.Y)){
+            elevator.higChamber();
+            Arm.OutPiece();
+            Arm.Gripperoffset();
+        } else if(ps4.wasJustReleased(GamepadKeys.Button.Y)){
+            elevator.Change();
+            Arm.Gripperoffset();
+        }
 
+        if(ps4.wasJustPressed(GamepadKeys.Button.B)){
+            Arm.OpenGripper();
+            Arm.ArmOfsetChamber();
+            elevator.offsetPOs();
+        }
 
-            //controls
-            // climber boton A, right bumper Take piece,
-            if(ps4.wasJustPressed(GamepadKeys.Button.A)){
-                elevator.climber();
+//            LLStatus status = limelight.getStatus();
+//            telemetry.addData("Name", "%s",
+//                    status.getName());
+//            telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+//                    status.getTemp(), status.getCpu(),(int)status.getFps());
+//            telemetry.addData("Pipeline", "Index: %d, Type: %s",
+//                    status.getPipelineIndex(), status.getPipelineType());
 
-            }
-                else if(ps4.wasJustReleased(GamepadKeys.Button.A)){
-                elevator.offsetPOs();
-            }
-            if(ps4.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-                Arm.TakePiece();
-                Arm.OpenGripper();
+        LLResult result = limelight.getLatestResult();
+        if (result != null) {
+            Pose3D botpose = result.getBotpose();
+            double captureLatency = result.getCaptureLatency();
+            double targetingLatency = result.getTargetingLatency();
+            double parseLatency = result.getParseLatency();
+            telemetry.addData("LL Latency", captureLatency + targetingLatency);
+            telemetry.addData("Parse Latency", parseLatency);
 
-            }
-            else if (ps4.wasJustReleased(GamepadKeys.Button.RIGHT_BUMPER)) {
-
-                Arm.Gripperoffset();
-                Arm.armOfseTake();
-
-            }
-
-
-            if(ps4.wasJustPressed(GamepadKeys.Button.X)){
-                Arm.OutPieceBasket();
-                elevator.lowBasquet();
-
-            }
-            else if( ps4.wasJustReleased(GamepadKeys.Button.X)){
-                Arm.OpenGripper();
-                Arm.ArmOfsetBasket();
-                elevator.offsetPOs();
-            }
-            if (ps4.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
-                Arm.OpenGripper();
-
-            }
-
-
-            if(ps4.wasJustPressed(GamepadKeys.Button.Y)){
-
-                elevator.higChamber();
-                Arm.OutPiece();
-                Arm.Gripperoffset();
-
-            }
-            else if(ps4.wasJustReleased(GamepadKeys.Button.Y)){
-                elevator.Change();
-                Arm.Gripperoffset();
-            }
-            if(ps4.wasJustPressed(GamepadKeys.Button.B)){
-
-                Arm.OpenGripper();
-                Arm.ArmOfsetChamber();
-                elevator.offsetPOs();
-            }
-
-
+            if (result.isValid()) {
+                telemetry.addData("tx", result.getTx());
+                telemetry.addData("txnc", result.getTxNC());
+                telemetry.addData("ty", result.getTy());
+                telemetry.addData("tync", result.getTyNC());
+                telemetry.addData("Botpose", botpose.toString());
+            } else {
+                telemetry.addData("Limelight", "No data available");
             }
         }
+        telemetry.update();
+        }
+//    public void stop(){}
+    }
 
 
 
